@@ -17,7 +17,7 @@ cli.start = function(restart = false) {
         process.stdout.write(constants.cli.clear);
     }
 
-    console.log('\r\nType /help to see available commands');
+    console.log('Type /help to see available commands');
 
     this.question('Storage: ', commandInput => {
         switch(commandInput) {
