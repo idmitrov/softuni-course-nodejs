@@ -62,7 +62,7 @@ cli.start = function(restart = false) {
                         try {
                             let data = '';
 
-                            if (inputParams && inputParams[1]) {
+                            if (inputParams[1]) {
                                 data = storage[commandInput](inputParams[0], inputParams[1]);                        
                             } else {
                                 data = storage[commandInput](inputParams[0]);                        
