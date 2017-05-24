@@ -28,18 +28,20 @@ cli.start = function(restart = false) {
                     process.stdout.write(constants.cli.clear);
                   
                     if (exitAnswer === 'y' || exitAnswer === 'yes') {
-                        console.log('Storage saved!');
-                        
                         storage.save();
+
+                        console.log('Storage saved!');
                     }
                     
                     console.log('Catch you later!');
+                    
                     this.close();
                 });
 
                 break;
             case '/help':
                 process.stdout.write(constants.cli.clear);
+
                 console.log(`Available commands: ${commands.join(', ')}`);
                 
                 this.start(true);
@@ -49,6 +51,7 @@ cli.start = function(restart = false) {
             case 'load':
                 storage[commandInput]();
                 process.stdout.write(constants.cli.clear);
+
                 console.log(`${commandInput} done!`);
 
                 this.start(true);
@@ -81,6 +84,7 @@ cli.start = function(restart = false) {
                     });
                 } else {
                     process.stdout.write(constants.cli.clear);
+                    
                     console.log('Invalid command');
 
                     this.start(true);
