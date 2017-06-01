@@ -1,18 +1,15 @@
-const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
 const multiparty = require('multiparty');
 const shortid = require('shortid');
 const utils = require('../utils');
-
-const database = require('../config/database');
+const Product = require('../models/Product');
+const Category = require('../models/Category');
 
 module.exports = (req, res) => {
     let isProductUrl = req.pathname === '/product/add';
     
-    req.pathname = req.pathname || url.parse(req.url).pathname;
-
     if (isProductUrl && req.method === 'GET') {
         let filePath = path.normalize(
             path.join(__dirname, '../views/products/add.html')
@@ -27,11 +24,27 @@ module.exports = (req, res) => {
             if (err) {
                 status = 400;
                 data = '404 Not found';
+                
+                res.writeHead(status, headers);
+                res.write(data);
+                res.end();
             }
-            
-            res.writeHead(status, headers);
-            res.write(data);
-            res.end();
+
+            Category.find().then(categories => {
+                let replacement = '<select class="input-field" name="category">';
+
+                for (let category of categories) {
+                    replacement += `<option value="${category._id}">${category.name}</option>`;
+                }
+
+                replacement += '</select>';
+
+                let html = data.toString().replace(/{\s?categories\s?}/, replacement);
+                
+                res.writeHead(status, headers);
+                res.write(html);
+                res.end();
+            });
         });
     } else if (isProductUrl && req.method === 'POST') {
         let form = new multiparty.Form()
@@ -79,13 +92,18 @@ module.exports = (req, res) => {
         });
 
         form.on('close', () => {
-            database.products.add(product);
+            Product.create(product).then(createdProduct => {
+                Category.findById(product.category).then(category => {
+                    category.products.push(createdProduct._id);
+                    category.save();
 
-            res.writeHead(302, {
-                "Location": "/"
+                    res.writeHead(302, {
+                        "Location": "/"
+                    });
+
+                    res.end();
+                });
             });
-
-            res.end();
         });
 
         form.parse(req);

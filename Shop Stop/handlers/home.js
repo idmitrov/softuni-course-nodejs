@@ -3,8 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
 const utils = require('../utils');
-
-let database = require('../config/database');
+const Product = require('../models/Product');
 
 module.exports = (req, res) => {
     req.pathname = req.pathname || url.parse(req.url).pathname;
@@ -17,36 +16,39 @@ module.exports = (req, res) => {
                 statusCode = 400,
                 htmlContent = '404 Not Found';
             
-            if (!err) {
-                let products = database.products.getAll(),
-                    urlQuery = qs.parse(url.parse(req.url).query),
-                    content = '';
+            if (err) {
+                res.writeHead(statusCode, headers);
+                res.write(htmlContent);
+                res.end();  
+            } else {
+                Product.find().then(products => {
+                    let urlQuery = qs.parse(url.parse(req.url).query),
+                        content = '';
 
-                if (urlQuery.query && products.length) {
-                    products = products.filter(product => {
-                        return product.name.toLowerCase().indexOf(urlQuery.query.toLowerCase()) > -1;
-                    });
-                }
+                    if (urlQuery.query && products.length) {
+                        products = products
+                            .filter(p => p.name.toLowerCase().includes(urlQuery.query));
+                    }
+                    
+                    for (let product of products) {
+                        content += `
+                            <div class="product-card">
+                                <img class="product-image" src="${product.image}"/>
+                                <h2>${product.name}</h2>
+                                <p>${product.description}</p>
+                            </div>
+                        `;
+                    }
 
-                for (let product of products) {
-                    content += `
-                        <div class="product-card">
-                            <img class="product-image" src="${product.image}"/>
-                            <h2>${product.name}</h2>
-                            <p>${product.description}</p>
-                        </div>
-                    `;
-                }
-
-                statusCode = 200;
-                htmlContent = data.toString().replace(/{\s?content\s?}/g, content)
+                    statusCode = 200;
+                    htmlContent = data.toString().replace(/{\s?content\s?}/, content);
+                    headers['content-type'] = utils.getContentType(filePath);
+                    
+                    res.writeHead(statusCode, headers);
+                    res.write(htmlContent);
+                    res.end();
+                });
             }
-
-            headers['content-type'] = utils.getContentType(filePath);
-            
-            res.writeHead(statusCode, headers);
-            res.write(htmlContent);
-            res.end();
         });
     } else {
         return true;
