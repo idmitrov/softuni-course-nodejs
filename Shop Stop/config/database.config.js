@@ -12,12 +12,12 @@ module.exports = (config) => {
         }
 
         console.log('Connected to db');
+
+        require('../models/Category');
+        require('../models/Product');
     });
 
     database.on('error', err => {
-        cosnole.log(err);
+        console.log(err.message);
     });
-
-    require('../models/Category');
-    require('../models/Product');
 }
